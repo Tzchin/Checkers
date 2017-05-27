@@ -1,4 +1,4 @@
-#pragma once
+
 #include "PieceModel.h"
 
 PieceModel::PieceModel(PlayerModel* p, BoardModel * _bm)

@@ -24,15 +24,18 @@ bool StandardPieceModel::canMove(Coord co1, Coord co2)
 			Coord nco;
 			nco.x = co1.x +1;
 			nco.y = co1.y + player->direction;
-			return (bm->GetPiece(nco)->player->number != player->number);	
+            //Final Check jumping over own piece or nothing
+            return (bm->GetPiece(nco) != nullptr
+                    && bm->GetPiece(nco)->player->number != player->number);
 		}
 		if(co2.x - co1.x == -2)
 		{
 			Coord nco;
 			nco.x = co1.x - 1;
 			nco.y = co1.y + player->direction;
-			return (bm->GetPiece(nco)->player->number != player->number);	
-		}
+            //Final Check jumping over own piece or nothing
+            return (bm->GetPiece(nco) != nullptr
+                    && bm->GetPiece(nco)->player->number != player->number);		}
 	}
 	return false;
 

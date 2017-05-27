@@ -4,6 +4,8 @@
 #include "Coord.h"
 #include <stddef.h>
 #include "Autosave.h"
+enum WinState { none, p1win, p2win };
+
 class Autosave;
 
 class GameModel
@@ -21,6 +23,8 @@ public:
 	bool doMove(Coord co1, Coord co2);
 	bool switchActivePlayer();
 	bool canJumpAgain(Coord co);
+    PieceModel * getPiece(int x, int y);
+    WinState getWinner();
 private:
 	PlayerModel* player1;
 	PlayerModel* player2;

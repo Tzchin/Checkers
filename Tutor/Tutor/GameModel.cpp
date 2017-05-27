@@ -17,21 +17,21 @@ GameModel::GameModel(PlayerModel* p1, PlayerModel* p2, int _numRows, int _numCol
 void GameModel::initPieces()
 {
 	int row = 0, col = 0;
-	int offset = 0;
+	int offset = 1;
 	for(;row < 2; row++)
 	{
 		for(col = 0;col + offset < board.numCols; col += 2)
 		{
-			board.cells[col+offset][row].piece = new StandardPieceModel(player1, &board);
+			board.cells[col+offset][row].piece = new StandardPieceModel(player2, &board);
 		}
 		offset = 1 - offset;
 	}
-	offset =1;
+	offset = 0;
 	for(row = board.numRows - 1;row > board.numRows - 3; row--)
 	{
 		for(col = 0; col + offset < board.numCols; col += 2)
 		{
-			board.cells[col+offset][row].piece = new StandardPieceModel(player2, &board);
+			board.cells[col+offset][row].piece = new StandardPieceModel(player1, &board);
 		}
 		offset = 1 - offset;
 	}
@@ -99,17 +99,12 @@ bool GameModel::isMoveValid(Coord co1, Coord co2)
 
 bool GameModel::doMove(Coord co1, Coord co2)
 {
-	if (isMoveValid(co1, co2) == false) throw "Error: Executing Invalid Move";
+    bool capturedPiece = false;
+	if (!isMoveValid(co1, co2)) throw "Error: Executing Invalid Move";
 	autosave->addMove(co1,co2);
-	//Moves initial piece from coord 1 to coord 2
+	//Execute Move: Moves initial piece from coord 1 to coord 2:
 	board.SetPiece(co2, board.GetPiece(co1));
 	board.SetPiece(co1, nullptr); 
-
-	if(co2.y == 0 || co2.y == board.numRows-1) //Checks if piece at ends of row and promotes
-	{
-		removedPieces.push_back(board.GetPiece(co2));
-		board.SetPiece(co2, new KingPieceModel(board.GetPiece(co2)->player, &board));
-	}
 
 	if(co2.x - co1.x == 2 || co2.x - co1.x == -2) //Checks if jump, if so capture
 	{
@@ -118,10 +113,20 @@ bool GameModel::doMove(Coord co1, Coord co2)
 		nco.y = (co1.y + co2.y) /2;
 		removedPieces.push_back(board.GetPiece(nco));
 		board.SetPiece(nco, nullptr);
-		return canJumpAgain(co2);
+		capturedPiece= true;
 	}
-	switchActivePlayer();
-	return false;
+    
+    if(co2.y == 0 || co2.y == board.numRows-1) //Checks if piece at ends of row and promotes
+    {
+        removedPieces.push_back(board.GetPiece(co2));
+        board.SetPiece(co2, new KingPieceModel(board.GetPiece(co2)->player, &board));
+    }
+    if (!capturedPiece || !canJumpAgain(co2))
+    {
+        switchActivePlayer();
+        return false;
+    }
+	return true;
 
 }
 
@@ -144,4 +149,41 @@ bool GameModel::canJumpAgain(Coord co)
 		|| p->canMove(co,coBL)
 		|| p->canMove(co,coBR)
 		|| p->canMove(co,coTR));
+}
+
+PieceModel * GameModel::getPiece(int x, int y)
+{
+    Coord co;
+    co.x = x;
+    co.y = y;
+    return board.GetPiece(co);
+}
+
+WinState GameModel::getWinner()
+{
+//    int row = 0, col = 0;
+    bool p1exist = false;
+    bool p2exist = false;
+    for(int row = 0;row < board.numRows; row++)
+    {
+        for(int col = 0;col < board.numCols; col++)
+        {
+            if(board.cells[col][row].piece != nullptr)
+            {
+                if(board.cells[col][row].piece->player->number == 1)
+                    p1exist = true;
+                else
+                    p2exist = true;
+            }
+        }
+        
+    }
+    
+    if(p1exist && p2exist)
+        return none;
+    if(p1exist && !p2exist)
+        return p1win;
+    if(!p1exist && p2exist)
+        return p2win;
+    
 }
